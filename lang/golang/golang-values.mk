@@ -21,6 +21,7 @@ unexport \
   GOARCH \
   GOBIN \
   GOCACHE \
+  GOMODCACHE \
   GODEBUG \
   GOENV \
   GOFLAGS \
@@ -110,13 +111,13 @@ unexport \
   BOOT_GO_GCFLAGS \
   BOOT_GO_LDFLAGS
 
+# From https://golang.org/src/cmd/dist/buildruntime.go
+unexport \
+  GOEXPERIMENT
+
 # From https://golang.org/src/cmd/dist/buildtool.go
 unexport \
   GOBOOTSTRAP_TOOLEXEC
-
-# From https://golang.org/src/cmd/internal/objabi/util.go
-unexport \
-  GOEXPERIMENT
 
 
 # GOOS / GOARCH
