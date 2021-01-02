@@ -6,7 +6,7 @@
 # (Loosely) based on the script on the one posted by exobyte in the forums here:
 # http://forum.openwrt.org/viewtopic.php?id=14040
 # extended and partial rewritten
-#.2014-2017 Christian Schoenebeck <christian dot schoenebeck at gmail dot com>
+#.2014-2018 Christian Schoenebeck <christian dot schoenebeck at gmail dot com>
 #
 # variables in small chars are read from /etc/config/ddns
 # variables in big chars are defined inside these scripts as global vars
@@ -101,6 +101,7 @@ PIDFILE="$ddns_rundir/$SECTION_ID.pid"	# Process ID file
 UPDFILE="$ddns_rundir/$SECTION_ID.update"	# last update successful send (system uptime)
 DATFILE="$ddns_rundir/$SECTION_ID.dat"	# save stdout data of WGet and other extern programs called
 ERRFILE="$ddns_rundir/$SECTION_ID.err"	# save stderr output of WGet and other extern programs called
+IPFILE="$ddns_rundir/$SECTION_ID.ip"	#
 LOGFILE="$ddns_logdir/$SECTION_ID.log"	# log file
 
 # VERBOSE > 1 delete logfile if exist to create an empty one
@@ -194,6 +195,13 @@ ERR_LAST=$?	# save return code - equal 0 if SECTION_ID found
 [ "$ip_source" = "web" -a -z "$ip_url" -a $use_ipv6 -eq 1 ] && ip_url="http://checkipv6.dyndns.com"
 [ "$ip_source" = "interface" -a -z "$ip_interface" ] && ip_interface="eth1"
 
+# url encode username (might be email or something like this)
+# and password (might have special chars for security reason)
+# and optional parameter "param_enc"
+[ -n "$username" ] && urlencode URL_USER "$username"
+[ -n "$password" ] && urlencode URL_PASS "$password"
+[ -n "$param_enc" ] && urlencode URL_PENC "$param_enc"
+
 # SECTION_ID does not exists
 [ $ERR_LAST -ne 0 ] && {
 	[ $VERBOSE -le 1 ] && VERBOSE=2		# force console out and logfile output
@@ -201,14 +209,14 @@ ERR_LAST=$?	# save return code - equal 0 if SECTION_ID found
 	write_log  7 "************ ************** ************** **************"
 	write_log  5 "PID '$$' started at $(eval $DATE_PROG)"
 	write_log  7 "ddns version  : $VERSION"
-	write_log  7 "uci configuration:\n$(uci -q show ddns | grep '=service' | sort)"
+	write_log  7 "uci configuration:${N}$(uci -q show ddns | grep '=service' | sort)"
 	write_log 14 "Service section '$SECTION_ID' not defined"
 }
 
 write_log 7 "************ ************** ************** **************"
 write_log 5 "PID '$$' started at $(eval $DATE_PROG)"
 write_log 7 "ddns version  : $VERSION"
-write_log 7 "uci configuration:\n$(uci -q show ddns.$SECTION_ID | sort)"
+write_log 7 "uci configuration:${N}$(uci -q show ddns.$SECTION_ID | sort)"
 # write_log 7 "ddns version  : $(opkg list-installed ddns-scripts | cut -d ' ' -f 3)"
 case $VERBOSE in
 	0) write_log  7 "verbose mode  : 0 - run normal, NO console output";;
@@ -252,13 +260,6 @@ esac
 	[ -z "$param_opt" ] && $(echo "$update_url" | grep "\[PARAMOPT\]" >/dev/null 2>&1) && \
 		write_log 14 "Service section not configured correctly! Missing 'param_opt'"
 }
-
-# url encode username (might be email or something like this)
-# and password (might have special chars for security reason)
-# and optional parameter "param_enc"
-[ -n "$username" ] && urlencode URL_USER "$username"
-[ -n "$password" ] && urlencode URL_PASS "$password"
-[ -n "$param_enc" ] && urlencode URL_PENC "$param_enc"
 
 # verify ip_source 'script' if script is configured and executable
 if [ "$ip_source" = "script" ]; then

@@ -5,28 +5,31 @@
 # script for sending updates to cloudflare.com
 #.based on Ben Kulbertis cloudflare-update-record.sh found at http://gist.github.com/benkulbertis
 #.and on George Johnson's cf-ddns.sh found at https://github.com/gstuartj/cf-ddns.sh
-#.2016-2017 Christian Schoenebeck <christian dot schoenebeck at gmail dot com>
+#.2016-2018 Christian Schoenebeck <christian dot schoenebeck at gmail dot com>
 # CloudFlare API documentation at https://api.cloudflare.com/
 #
 # This script is parsed by dynamic_dns_functions.sh inside send_update() function
 #
 # using following options from /etc/config/ddns
-# option username - your cloudflare e-mail
-# option password - cloudflare api key, you can get it from cloudflare.com/my-account/
-# option domain   - "hostname@yourdomain.TLD"	# syntax changed to remove split_FQDN() function and tld_names.dat.gz
+# option username  - your cloudflare e-mail
+# option password  - cloudflare api key, you can get it from cloudflare.com/my-account/
+# option domain    - "hostname@yourdomain.TLD"	# syntax changed to remove split_FQDN() function and tld_names.dat.gz
+#
+# The proxy status would not be changed by this script. Please change it in Cloudflare dashboard manually. 
 #
 # variable __IP already defined with the ip-address to use for update
 #
 
 # check parameters
-[ -z "$CURL_SSL" ] && write_log 14 "Cloudflare communication require cURL with SSL support. Please install"
+[ -z "$CURL" ] && [ -z "$CURL_SSL" ] && write_log 14 "Cloudflare communication require cURL with SSL support. Please install"
 [ -z "$username" ] && write_log 14 "Service section not configured correctly! Missing key as 'username'"
 [ -z "$password" ] && write_log 14 "Service section not configured correctly! Missing secret as 'password'"
 [ $use_https -eq 0 ] && use_https=1	# force HTTPS
 
 # used variables
-local __HOST __DOMAIN __TYPE __URLBASE __PRGBASE __RUNPROG __DATA __IPV6 __ZONEID __RECID
+local __HOST __DOMAIN __TYPE __URLBASE __PRGBASE __RUNPROG __DATA __IPV6 __ZONEID __RECID __PROXIED
 local __URLBASE="https://api.cloudflare.com/client/v4"
+local __TTL=120
 
 # split __HOST __DOMAIN from $domain
 # given data:
@@ -82,7 +85,7 @@ cloudflare_transfer() {
 	done
 
 	# check for error
-	grep -q '"success":true' $DATFILE || {
+	grep -q '"success":\s*true' $DATFILE || {
 		write_log 4 "CloudFlare reported an error:"
 		write_log 7 "$(cat $DATFILE)"		# report error
 		return 1	# HTTP-Fehler
@@ -122,16 +125,20 @@ elif [ -z "$CURL_PROXY" ]; then
 	write_log 13 "cURL: libcurl compiled without Proxy support"
 fi
 # set headers
-__PRGBASE="$__PRGBASE --header 'X-Auth-Email: $username' "
-__PRGBASE="$__PRGBASE --header 'X-Auth-Key: $password' "
+if [ "$username" = "Bearer" ]; then
+  write_log 7 "Found Username 'Bearer' using Password as Bearer Authorization Token"
+  __PRGBASE="$__PRGBASE --header 'Authorization: Bearer $password' "
+else
+  __PRGBASE="$__PRGBASE --header 'X-Auth-Email: $username' "
+  __PRGBASE="$__PRGBASE --header 'X-Auth-Key: $password' "
+fi
 __PRGBASE="$__PRGBASE --header 'Content-Type: application/json' "
-# __PRGBASE="$__PRGBASE --header 'Accept: application/json' "
 
 # read zone id for registered domain.TLD
 __RUNPROG="$__PRGBASE --request GET '$__URLBASE/zones?name=$__DOMAIN'"
 cloudflare_transfer || return 1
 # extract zone id
-__ZONEID=$(grep -o '"id":"[^"]*' $DATFILE | grep -o '[^"]*$' | head -1)
+__ZONEID=$(grep -o '"id":\s*"[^"]*' $DATFILE | grep -o '[^"]*$' | head -1)
 [ -z "$__ZONEID" ] && {
 	write_log 4 "Could not detect 'zone id' for domain.tld: '$__DOMAIN'"
 	return 127
@@ -141,14 +148,14 @@ __ZONEID=$(grep -o '"id":"[^"]*' $DATFILE | grep -o '[^"]*$' | head -1)
 __RUNPROG="$__PRGBASE --request GET '$__URLBASE/zones/$__ZONEID/dns_records?name=$__HOST&type=$__TYPE'"
 cloudflare_transfer || return 1
 # extract record id
-__RECID=$(grep -o '"id":"[^"]*' $DATFILE | grep -o '[^"]*$' | head -1)
+__RECID=$(grep -o '"id":\s*"[^"]*' $DATFILE | grep -o '[^"]*$' | head -1)
 [ -z "$__RECID" ] && {
 	write_log 4 "Could not detect 'record id' for host.domain.tld: '$__HOST'"
 	return 127
 }
 
 # extract current stored IP
-__DATA=$(grep -o '"content":"[^"]*' $DATFILE | grep -o '[^"]*$' | head -1)
+__DATA=$(grep -o '"content":\s*"[^"]*' $DATFILE | grep -o '[^"]*$' | head -1)
 
 # check data
 [ $use_ipv6 -eq 0 ] \
@@ -174,10 +181,13 @@ __DATA=$(grep -o '"content":"[^"]*' $DATFILE | grep -o '[^"]*$' | head -1)
 }
 
 # update is needed
-# let's build data to send,
+# let's build data to send
+# set proxied parameter
+__PROXIED=$(grep -o '"proxied":\s*[^",]*' $DATFILE | grep -o '[^:]*$')
+
 # use file to work around " needed for json
 cat > $DATFILE << EOF
-{"id":"$__ZONEID","type":"$__TYPE","name":"$__HOST","content":"$__IP"}
+{"id":"$__ZONEID","type":"$__TYPE","name":"$__HOST","content":"$__IP","ttl":$__TTL,"proxied":$__PROXIED}
 EOF
 
 # let's complete transfer command
@@ -185,4 +195,3 @@ __RUNPROG="$__PRGBASE --request PUT --data @$DATFILE '$__URLBASE/zones/$__ZONEID
 cloudflare_transfer || return 1
 
 return 0
-
