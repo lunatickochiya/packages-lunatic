@@ -117,6 +117,9 @@ define Package/node/config
 	endchoice
 
 	endmenu
+		config NODEJS_UPX
+		depends on PACKAGE_node
+		bool "Compress executable files with UPX"
 endef
 
 NODEJS_CPU:=$(subst powerpc,ppc,$(subst aarch64,arm64,$(subst x86_64,x64,$(subst i386,ia32,$(ARCH)))))
@@ -190,6 +193,13 @@ define Build/Prepare
 endef
 endif
 endif
+
+define Build/Install
+$(call Build/Install/Default)
+ifeq ($(CONFIG_NODEJS_UPX),y)
+	upx --lzma --best $(PKG_INSTALL_DIR)/usr/bin/node
+endif
+endef
 
 define Build/InstallDev
 	$(INSTALL_DIR) $(1)/usr/include
