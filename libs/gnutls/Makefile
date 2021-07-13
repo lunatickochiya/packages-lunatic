@@ -8,13 +8,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=gnutls
-PKG_VERSION:=3.7.0
-PKG_RELEASE:=2
+PKG_VERSION:=3.7.2
+PKG_RELEASE:=$(AUTORELEASE)
 PKG_USE_MIPS16:=0
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=https://www.gnupg.org/ftp/gcrypt/gnutls/v3.7
-PKG_HASH:=49e2a22691d252c9f24a9829b293a8f359095bc5a818351f05f1c0a5188a1df8
+PKG_HASH:=646e6c5a9a185faa4cea796d378a1ba8e1148dbb197ca6605f95986a25af2752
 PKG_FIXUP:=autoreconf gettext-version
 PKG_MAINTAINER:=Nikos Mavrogiannopoulos <nmav@gnutls.org>
 PKG_LICENSE:=LGPL-2.1-or-later

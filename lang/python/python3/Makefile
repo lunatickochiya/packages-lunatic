@@ -16,7 +16,7 @@ PKG_VERSION:=$(PYTHON3_VERSION).$(PYTHON3_VERSION_MICRO)
 
 PKG_SOURCE:=Python-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=https://www.python.org/ftp/python/$(PKG_VERSION)
-PKG_HASH:=3c2034c54f811448f516668dce09d24008a0716c3a794dd8639b5388cbde247d
+PKG_HASH:=397920af33efc5b97f2e0b57e91923512ef89fc5b3c1d21dbfc8c4828ce0108a
 
 PKG_MAINTAINER:=Alexandru Ardelean <ardeleanalex@gmail.com>, Jeffery To <jeffery.to@gmail.com>
 PKG_LICENSE:=Python/2.0
@@ -66,10 +66,21 @@ define Package/python3/Default/description
  the development of higher quality, more maintainable code.
 endef
 
+define Package/libpython3
+$(call Package/python3/Default)
+  TITLE:=Python $(PYTHON3_VERSION) core library
+  DEPENDS:=+libpthread +zlib
+  ABI_VERSION:=$(PYTHON3_VERSION)
+endef
+
+define Package/libpython3/description
+  This package contains only core Python library.
+endef
+
 define Package/python3-base
 $(call Package/python3/Default)
   TITLE:=Python $(PYTHON3_VERSION) interpreter
-  DEPENDS:=+libpthread +zlib
+  DEPENDS:=+libpthread +zlib +libpython3
 endef
 
 define Package/python3-base/description
@@ -179,6 +190,10 @@ define Build/Compile/python3-setuptools
 		$(PKG_BUILD_DIR)/Lib/ensurepip/_bundled/setuptools-$(PYTHON3_SETUPTOOLS_VERSION)-py3-none-any.whl
 	$(call PatchDir,$(PKG_BUILD_DIR)/install-setuptools/usr/lib/python$(PYTHON3_VERSION)/site-packages,./patches-setuptools,)
 endef
+else
+define Build/Compile/python3-setuptools
+	ls $(PKG_BUILD_DIR)/Lib/ensurepip/_bundled/setuptools-$(PYTHON3_SETUPTOOLS_VERSION)-py3-none-any.whl
+endef
 endif # CONFIG_PACKAGE_python3-setuptools
 
 ifdef CONFIG_PACKAGE_python3-pip
@@ -190,8 +205,12 @@ define Build/Compile/python3-pip
 		--ignore-installed \
 		--root=$(PKG_BUILD_DIR)/install-pip \
 		--prefix=/usr \
-		$(PKG_BUILD_DIR)/Lib/ensurepip/_bundled/pip-$(PYTHON3_PIP_VERSION)-py2.py3-none-any.whl
+		$(PKG_BUILD_DIR)/Lib/ensurepip/_bundled/pip-$(PYTHON3_PIP_VERSION)-py3-none-any.whl
 	$(call PatchDir,$(PKG_BUILD_DIR)/install-pip/usr/lib/python$(PYTHON3_VERSION)/site-packages,./patches-pip,)
+endef
+else
+define Build/Compile/python3-pip
+	ls $(PKG_BUILD_DIR)/Lib/ensurepip/_bundled/pip-$(PYTHON3_PIP_VERSION)-py3-none-any.whl
 endef
 endif # CONFIG_PACKAGE_python3-pip
 
@@ -259,7 +278,6 @@ define Py3Package/python3-light/filespec
 -|/usr/lib/python$(PYTHON3_VERSION)/tkinter
 -|/usr/lib/python$(PYTHON3_VERSION)/turtledemo
 -|/usr/lib/python$(PYTHON3_VERSION)/lib-dynload/_test*.so
--|/usr/lib/python$(PYTHON3_VERSION)/lib-dynload/readline*.so
 -|/usr/lib/python$(PYTHON3_VERSION)/pdb.doc
 -|/usr/lib/python$(PYTHON3_VERSION)/test
 -|/usr/lib/python$(PYTHON3_VERSION)/webbrowser.py
@@ -269,13 +287,16 @@ define Py3Package/python3-light/filespec
 $(subst $(space),$(newline),$(foreach lib_file,$(PYTHON3_LIB_FILES_DEL),-|$(lib_file)))
 endef
 
-define Py3Package/python3-base/install
+define Package/libpython3/install
 	# Adding the lib-dynload folder (even just empty) suppresses 2 warnings when starting Python
 	$(INSTALL_DIR) $(1)/usr/lib/python$(PYTHON3_VERSION)/lib-dynload/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libpython$(PYTHON3_VERSION).so* $(1)/usr/lib/
+endef
+
+define Py3Package/python3-base/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(LN) python$(PYTHON3_VERSION) $(1)/usr/bin/python3
 	$(LN) python$(PYTHON3_VERSION) $(1)/usr/bin/python
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libpython$(PYTHON3_VERSION).so* $(1)/usr/lib/
   # This depends on being called before filespec is processed
 	$(SED) 's|$(TARGET_AR)|ar|g;s|$(TARGET_CROSS)readelf|readelf|g;s|$(TARGET_CC)|gcc|g;s|$(TARGET_CXX)|g++|g' \
 		$(PKG_INSTALL_DIR)/usr/lib/python$(PYTHON3_VERSION)/_sysconfigdata.py
@@ -324,7 +345,6 @@ endef
 define Host/Install
 	$(if $(wildcard $(HOST_PYTHON3_PKG_DIR)/.setuptools_installed_$(PYTHON3_SETUPTOOLS_VERSION)-$(PYTHON3_SETUPTOOLS_PKG_RELEASE)),,
 		rm -rf \
-			$(HOST_PYTHON3_PKG_DIR)/easy_install.py \
 			$(HOST_PYTHON3_PKG_DIR)/pkg_resources \
 			$(HOST_PYTHON3_PKG_DIR)/setuptools \
 			$(HOST_PYTHON3_PKG_DIR)/setuptools-* \
@@ -356,6 +376,8 @@ $(foreach package, $(PYTHON3_PACKAGES),  \
 	$(eval $(call BuildPackage,$(package))) \
 	$(eval $(call BuildPackage,$(package)-src)) \
 )
+
+$(eval $(call BuildPackage,libpython3))
 
 $(eval $(call Py3Package,python3-base))
 $(eval $(call Py3Package,python3-light))

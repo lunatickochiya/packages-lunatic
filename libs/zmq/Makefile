@@ -22,7 +22,6 @@ PKG_LICENSE:=GPL-3.0-or-later
 PKG_LICENSE_FILES:=LICENCE.txt
 PKG_CPE_ID:=cpe:/a:zeromq:libzmq
 
-PKG_BUILD_PARALLEL:=1
 CMAKE_BINARY_SUBDIR:=openwrt-build
 
 include $(INCLUDE_DIR)/package.mk

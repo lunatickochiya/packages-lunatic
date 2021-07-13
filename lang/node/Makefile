@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=node
-PKG_VERSION:=v14.16.0
+PKG_VERSION:=v14.17.1
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=https://nodejs.org/dist/$(PKG_VERSION)
-PKG_HASH:=4e7648a617f79b459d583f7dbdd31fbbac5b846d41598f3b54331a5b6115dfa6
+PKG_HASH:=ddf1d2d56ddf35ecd98c5ea5ddcd690b245899f289559b4330c921255f5a247f
 
 PKG_MAINTAINER:=Hirokazu MORIKAWA <morikw2@gmail.com>, Adrian Panella <ianchi74@outlook.com>
 PKG_LICENSE:=MIT
@@ -71,7 +71,7 @@ define Package/node/config
 	if PACKAGE_node
 	choice
 		prompt "i18n features"
-		default NODEJS_ICU_NONE
+		default NODEJS_ICU_SMALL
 		help
 		 Select i18n features
 
@@ -141,8 +141,13 @@ define Package/node/install
 endef
 
 define Package/node-npm/install
-	$(INSTALL_DIR) $(1)/usr/lib/node_modules
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/node_modules/* $(1)/usr/lib/node_modules/
+	$(INSTALL_DIR) $(1)/usr/lib/node_modules/npm
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/node_modules/npm/{package.json,LICENSE} \
+		$(1)/usr/lib/node_modules/npm/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/node_modules/npm/{AUTHORS,*.md} \
+		$(1)/usr/lib/node_modules/npm/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/node_modules/npm/{node_modules,bin,lib} \
+		$(1)/usr/lib/node_modules/npm/
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(LN) ../lib/node_modules/npm/bin/npm-cli.js $(1)/usr/bin/npm
 	$(LN) ../lib/node_modules/npm/bin/npx-cli.js $(1)/usr/bin/npx

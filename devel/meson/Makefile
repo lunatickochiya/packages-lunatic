@@ -1,17 +1,15 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=meson
-PKG_VERSION:=0.56.2
-PKG_RELEASE:=1
+PKG_VERSION:=0.57.2
+PKG_RELEASE:=$(AUTORELEASE)
 
 PYPI_NAME:=meson
-PKG_HASH:=3cb8bdb91383f7f8da642f916e4c44066a29262caa499341e2880f010edb87f4
+PKG_HASH:=3a83e7b1c5de94fa991ec34d9b198d94f38ed699d3524cb0fdf3b99fd23d4cc5
 
 PKG_MAINTAINER:=Andre Heider <a.heider@gmail.com>
 PKG_LICENSE:=Apache-2.0
 PKG_LICENSE_FILES:=COPYING
-
-HOST_BUILD_DEPENDS:=ninja/host
 
 include ../../lang/python/pypi.mk
 include $(INCLUDE_DIR)/host-build.mk

@@ -6,12 +6,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mpd
-PKG_VERSION:=0.22.6
-PKG_RELEASE:=1
+PKG_VERSION:=0.22.8
+PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=https://www.musicpd.org/download/mpd/0.22/
-PKG_HASH:=2be149a4895c3cb613477f8cf1193593e3d8a1d38a75ffa7d32da8c8316a4d5e
+PKG_HASH:=9617ed08c9ffafcf5f925819251f6b90df3f4f73cf2838c41033e1962104286d
 
 PKG_MAINTAINER:=
 PKG_LICENSE:=GPL-2.0-or-later
@@ -35,6 +35,7 @@ define Package/mpd/Default
   URL:=https://www.musicpd.org/
   DEPENDS:= +zlib +libcurl +libpthread +libmpdclient +boost $(ICONV_DEPENDS) \
             +AUDIO_SUPPORT:alsa-lib +libexpat +libflac +libid3tag +libfaad2 +libopus
+  USERID:=mpd:mpd
 endef
 
 define Package/mpd/Default/description
@@ -48,7 +49,7 @@ define Package/mpd-full
 $(call Package/mpd/Default)
   TITLE+= (full)
   DEPENDS+= +AUDIO_SUPPORT:pulseaudio-daemon +libvorbis +libmms +libupnp +libshout +yajl \
-            +BUILD_PATENTED:libffmpeg +!BUILD_PATENTED:libmad
+            +libffmpeg +lame-lib +!BUILD_PATENTED:libmad
   PROVIDES:=mpd
   VARIANT:=full
 endef
@@ -188,7 +189,9 @@ ifeq ($(BUILD_VARIANT),full)
 	-Dpulse=$(if $(CONFIG_AUDIO_SUPPORT),en,dis)abled \
 	-Drecorder=true \
 	-Dshout=enabled \
-	-Dyajl=enabled
+	-Dyajl=enabled \
+	-Dvorbisenc=enabled \
+	-Dlame=enabled
 
 ifeq ($(CONFIG_AUDIO_SUPPORT),y)
 	TARGET_LDFLAGS += -Wl,-rpath-link=$(STAGING_DIR)/usr/lib/pulseaudio
@@ -218,7 +221,7 @@ define Package/mpd/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/mpd $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/etc
-	$(INSTALL_CONF) $(PKG_BUILD_DIR)/doc/mpdconf.example $(1)/etc/mpd.conf
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/doc/mpdconf.example $(1)/etc/mpd.conf
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/mpd.init $(1)/etc/init.d/mpd
 endef

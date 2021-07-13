@@ -1,14 +1,14 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=conmon
-PKG_VERSION:=2.0.26
-PKG_RELEASE:=1
+PKG_VERSION:=2.0.29
+PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://github.com/containers/$(PKG_NAME)/archive/v$(PKG_VERSION)
-PKG_HASH:=845744c3323bbf9adab4444d70fd7de0ceb12a578c9cf2fd2366c6bed0ac7970
+PKG_HASH:=eb4d5e157671a61b88786e44094775194e30e1d0ad0b9d50035532ece78dbc28
 
-PKG_MAINTAINER:=Daniel Golle <daniel@makrotopia.org>
+PKG_MAINTAINER:=Oskari Rauta <oskari.rauta@gmail.com>
 PKG_LICENSE:=Apache-2.0
 PKG_LICENSE_FILES:=LICENSE
 
@@ -21,13 +21,17 @@ include ../../devel/meson/meson.mk
 define Package/conmon
   SECTION:=utils
   CATEGORY:=Utilities
-  TITLE:=Podmon conmon
+  TITLE:=Podman conmon
   URL:=https://podman.io
   DEPENDS:=+glib2 $(INTL_DEPENDS) $(ICONV_DEPENDS)
 endef
 
 define Package/conmon/description
-  Podman: A tool for managing OCI containers and pods
+  An OCI container runtime monitor.
+
+  Conmon is a monitoring program and communication tool between
+  a container manager (like Podman or CRI-O) and an OCI runtime
+  (like runc or crun) for a single container.
 endef
 
 define Package/conmon/install
