@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ariang
-PKG_VERSION:=1.1.7
+PKG_VERSION:=1.2.2
 PKG_RELEASE:=1
 
 PKG_SOURCE_URL:=https://codeload.github.com/mayswind/AriaNg-DailyBuild/tar.gz/$(PKG_VERSION)?
@@ -55,14 +55,15 @@ define Package/ariang/install
 		$(PKG_BUILD_DIR)/index.html \
 		$(PKG_BUILD_DIR)/index.manifest \
 		$(PKG_BUILD_DIR)/LICENSE \
-		$(PKG_BUILD_DIR)/favicon.ico \
+		$(PKG_BUILD_DIR)/{favicon.*,*.png} \
+		$(PKG_BUILD_DIR)/robots.txt \
 		$(1)/www/ariang
 endef
 
 define Package/ariang-nginx/install
 	$(Package/ariang/install)
-	$(INSTALL_DIR) $(1)/etc/nginx
-	$(INSTALL_BIN) ./files/ariang.conf $(1)/etc/nginx/ariang.conf
+	$(INSTALL_DIR) $(1)/etc/nginx/conf.d/
+	$(INSTALL_BIN) ./files/ariang.locations $(1)/etc/nginx/conf.d/
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/80_ariang-nginx-support $(1)/etc/uci-defaults/80_ariang-nginx-support
 endef
