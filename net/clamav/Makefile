@@ -1,4 +1,4 @@
-#
+
 # Copyright (C) 2015 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
@@ -8,29 +8,33 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=clamav
-PKG_VERSION:=0.98.7
+PKG_VERSION:=0.102.4
 PKG_RELEASE:=1
 
-PKG_LICENSE:=GPL-2.0
-PKG_MAINTAINER:=Marko Ratkaj <marko.ratkaj@sartura.hr>
-
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=http://sourceforge.net/projects/clamav/files/clamav/$(PKG_VERSION)/
-PKG_MD5SUM:=157c601161da1c2d5a0e48ea1b49e067
+PKG_SOURCE_URL:=https://www.clamav.net/downloads/production/
+PKG_HASH:=eebd426a68020ecad0d2084b8c763e6898ccfd5febcae833d719640bb3ff391b
+
+PKG_MAINTAINER:=Marko Ratkaj <marko.ratkaj@sartura.hr> \
+		Lucian Cristian <lucian.cristian@gmail.com>
+PKG_LICENSE:=GPL-2.0-only
+PKG_LICENSE_FILES:=COPYING*
+PKG_CPE_ID:=cpe:/a:clamav:clamav
 
 PKG_BUILD_PARALLEL:=1
 PKG_INSTALL:=1
+PKG_FIXUP:=autoreconf
 
 include $(INCLUDE_DIR)/uclibc++.mk
 include $(INCLUDE_DIR)/package.mk
 
 define Package/clamav/Default
   SECTION:=net
-  DEPENDS:=+libpthread +uclibcxx +zlib +libcurl +libopenssl
+  DEPENDS:=$(CXX_DEPENDS) +libpthread +zlib +libcurl +libjson-c +libmilter-sendmail +libopenssl +libltdl +libpcre2 +USE_MUSL:musl-fts
   CATEGORY:=Network
   SUBMENU:=Web Servers/Proxies
   TITLE:=ClamAV
-  URL:=http://www.clamav.net/
+  URL:=https://www.clamav.net/
 endef
 
 define Package/clamav
@@ -55,45 +59,49 @@ endef
 define Package/clamav/conffiles
 endef
 
+CONFIGURE_ARGS += \
+	--sysconfdir=/etc/clamav/ \
+	--enable-milter \
+	--disable-bzip2 \
+	--disable-check \
+	--disable-clamdtop \
+	--disable-rpath \
+	--disable-xml \
+	--disable-zlib-vcheck \
+	--with-user=nobody \
+	--with-group=nogroup \
+	--with-libcurl="$(STAGING_DIR)/usr/" \
+	--with-libjson="$(STAGING_DIR)/usr/" \
+	--with-openssl="$(STAGING_DIR)/usr/" \
+	--with-pcre="$(STAGING_DIR)/usr/" \
+	--with-zlib="$(STAGING_DIR)/usr/" \
+	--without-iconv \
+	--without-libncurses-prefix
+
 CONFIGURE_VARS += \
-	INCLUDES="" \
-	CXXFLAGS="$$$$CXXFLAGS -fno-rtti" \
-	LIBS="-lpthread" \
+	ax_cv_uname_syscall=yes \
+	ac_cv_c_mmap_private=yes \
+	have_cv_gai=yes \
+	ac_cv_sys_file_offset_bits=no
 
-define Build/Configure
-	$(call Build/Configure/Default, \
-		--sysconfdir=/etc/clamav/ \
-		--prefix=/usr/ \
-		--exec-prefix=/usr/ \
-		--disable-xml \
-		--disable-bzip2 \
-		--enable-ltdl-install \
-		--with-user nobody \
-		--with-group nogroup \
-	)
-endef
+CONFIGURE_VARS += $(if $(CONFIG_IPV6),have_cv_ipv6=yes)
 
-define Build/Compile
-	$(MAKE) -C $(PKG_BUILD_DIR) \
-		DESTDIR="$(PKG_INSTALL_DIR)" \
-		all install
-endef
+TARGET_CXXFLAGS += -ffunction-sections -fdata-sections -fno-rtti -flto
+TARGET_LDFLAGS += -Wl,--gc-sections,--as-needed $(if $(CONFIG_USE_MUSL),-lfts)
 
 define Package/clamav/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/clamd $(1)/usr/sbin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/clamav-config $(1)/usr/sbin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/clamav-milter $(1)/usr/sbin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/clambc $(1)/usr/sbin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/clamconf $(1)/usr/sbin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/clamdscan $(1)/usr/sbin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/clamscan $(1)/usr/sbin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/clamonacc $(1)/usr/sbin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/sigtool $(1)/usr/sbin/
 
-	$(INSTALL_DIR) $(1)/usr/include
-	$(CP) $(PKG_INSTALL_DIR)/usr/include/clamav.h $(1)/usr/include/
-
 	$(INSTALL_DIR) $(1)/usr/lib
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib*/* $(1)/usr/lib/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib*/lib*.so.* $(1)/usr/lib/
 
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_CONF) ./files/clamav.config $(1)/etc/config/clamav
