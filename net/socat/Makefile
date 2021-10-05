@@ -6,17 +6,18 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=socat
-PKG_VERSION:=1.7.3.1
-PKG_RELEASE:=2
+PKG_VERSION:=1.7.3.3
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:=http://www.dest-unreach.org/socat/download
-PKG_MD5SUM:=d2da659540c38139f388e9437bfaae16bb458d174d056cb3228432a8f489fbaa
+PKG_HASH:=0dd63ffe498168a4aac41d307594c5076ff307aa0ac04b141f8f1cec6594d04a
 
-PKG_MAINTAINER:= Ted Hess <thess@kitschensync.net>
+PKG_MAINTAINER:=Ted Hess <thess@kitschensync.net>
 
 PKG_LICENSE:=GPL-2.0 OpenSSL
 PKG_LICENSE_FILES:=COPYING COPYING.OpenSSL
+PKG_CPE_ID:=cpe:/a:dest-unreach:socat
 
 PKG_INSTALL:=1
 
@@ -77,10 +78,8 @@ endif
 CONFIGURE_VARS += \
 	sc_cv_termios_ispeed="no" \
 	ac_cv_header_bsd_libutil_h=no \
-	ac_cv_lib_bsd_openpty=no
-
-TARGET_CFLAGS += \
-	-include stddef.h
+	ac_cv_lib_bsd_openpty=no \
+	BUILD_DATE=$(SOURCE_DATE_EPOCH)
 
 define Package/socat/install
 	$(INSTALL_DIR) $(1)/usr/bin
