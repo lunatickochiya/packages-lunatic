@@ -5,19 +5,17 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=dawn
-PKG_SOURCE_DATE:=2020-07-21
-PKG_RELEASE:=1
+PKG_SOURCE_DATE:=2021-07-27
+PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/berlin-open-wireless-lab/DAWN.git
-PKG_SOURCE_VERSION:=2f585043c345ae540bea9b2265fe5232e9f5abff
-PKG_MD5SUM:=9539caea47df483d64d3d46317248b63
+PKG_SOURCE_VERSION:=276ca169a7c5c07932e54c03f4aa05c9eb192b38
+PKG_MIRROR_HASH:=4abc5b0aa14553c8b9787641da009efbf7fc4f2994720c2ccf1b2b31fc949ca5
 
 PKG_MAINTAINER:=Nick Hainke <vincent@systemli.org>
 PKG_LICENSE:=GPL-2.0-only
 PKG_LICENSE_FILES:=LICENSE
-
-PKG_BUILD_PARALLEL:=1
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/cmake.mk
@@ -27,13 +25,12 @@ define Package/dawn
   CATEGORY:=Network
   TITLE:=Decentralized wifi controller
   URL:=https://github.com/berlin-open-wireless-lab/DAWN.git
-  DEPENDS:=$(DRV_DEPENDS) +libubus +libubox +libblobmsg-json +libuci +libgcrypt +libiwinfo +umdns +libpthread
+  DEPENDS:=$(DRV_DEPENDS) +libubus +libubox +libblobmsg-json +libuci +libgcrypt +libiwinfo +umdns
 endef
 
 define Package/dawn/description
   This package implements a decentralized wireless daemon.
 endef
-
 
 define Package/dawn/conffiles
 /etc/config/dawn
