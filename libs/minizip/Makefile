@@ -7,18 +7,16 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=minizip-ng
-PKG_VERSION:=3.0.0
+PKG_VERSION:=3.0.3
 PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/zlib-ng/minizip-ng/tar.gz/$(PKG_VERSION)?
-PKG_HASH:=13b4afd96fbf2456f441a32dc9f5d3c983a5ece9e6a3903fc9322c8ad5518546
+PKG_HASH:=5f1dd0d38adbe9785cb9c4e6e47738c109d73a0afa86e58c4025ce3e2cc504ed
 
 PKG_MAINTAINER:=David Woodhouse <dwmw2@infradead.org>
 PKG_LICENSE:=Zlib
 PKG_LICENSE_FILES:=LICENSE
-
-PKG_BUILD_PARALLEL:=1
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/cmake.mk
@@ -28,7 +26,7 @@ CMAKE_OPTIONS += \
 	-DINSTALL_INC_DIR=/usr/include/minizip \
 	-DBUILD_SHARED_LIBS=ON \
 	-DMZ_BZIP2=OFF \
-	-DMZ_COMPAT=OFF \
+	-DMZ_COMPAT=ON \
 	-DMZ_ICONV=OFF \
 	-DMZ_LIBBSD=OFF \
 	-DMZ_LZMA=OFF \

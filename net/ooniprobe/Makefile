@@ -8,14 +8,14 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ooniprobe
-PKG_VERSION:=3.7.0
+PKG_VERSION:=3.10.1
 PKG_RELEASE:=1
 
 PKG_SOURCE:=probe-cli-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/ooni/probe-cli/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=27f0eec380825f236f7ab3aff22dd29d7090ef47d1ce1ccb1e728e0b846b30ce
+PKG_HASH:=2b81c14133f39ac91c4ea6761be7a27d768cd88989b52ae72376d1d7b69de322
 
-PKG_MAINTAINER:=Jan Pavlinec <jan.pavlinec@nic.cz>
+PKG_MAINTAINER:=Jan Pavlinec <jan.pavlinec1@gmail.com>
 PKG_LICENSE:=BSD-3-Clause
 PKG_LICENSE_FILES:=LICENSE.md
 
@@ -41,11 +41,6 @@ endef
 define Package/ooniprobe/description
   The next generation of  OONI(Open Observatory of Network Interference)
   Probe Command Line Interface.
-endef
-
-define Build/Configure
-	$(call GoPackage/Build/Configure)
-	cd $(PKG_BUILD_DIR) && $(STAGING_DIR_HOSTPKG)/bin/go run $(PKG_BUILD_DIR)/internal/cmd/getresources/getresources.go
 endef
 
 $(eval $(call GoBinPackage,ooniprobe))

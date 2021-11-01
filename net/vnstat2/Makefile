@@ -6,12 +6,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=vnstat2
-PKG_VERSION:=2.6
-PKG_RELEASE:=1
+PKG_VERSION:=2.8
+PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE:=vnstat-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://humdi.net/vnstat
-PKG_HASH:=89276e0a7281943edb554b874078278ad947dc312938a2451e03eb80679f7ff7
+PKG_HASH:=03f858a7abf6bd85bb8cd595f3541fc3bd31f8f400ec092ef3034825ccb77c25
 
 PKG_LICENSE:=GPL-2.0-only
 PKG_LICENSE_FILES:=COPYING
@@ -77,6 +77,8 @@ define Package/vnstat2/install
 	$(INSTALL_CONF) ./files/vnstat.config $(1)/etc/config/vnstat
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/vnstat.init $(1)/etc/init.d/vnstat
+	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
+	$(INSTALL_DATA) ./files/vnstat.hotplug $(1)/etc/hotplug.d/iface/50-vnstat
 endef
 
 define Package/vnstati2/install

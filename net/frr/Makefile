@@ -7,16 +7,16 @@
 
 include $(TOPDIR)/rules.mk
 PKG_NAME:=frr
-PKG_VERSION:=7.5
-PKG_RELEASE:=5
-PKG_SOURCE_DATE:=2021-02-26
+PKG_VERSION:=7.5.1
+PKG_RELEASE:=2
+PKG_SOURCE_DATE:=2021-08-26
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_SOURCE_DATE).tar.gz
-PKG_SOURCE_VERSION:=13a8efb4b6e3c92e8b9361c9cb1e78a86b0194cf
+PKG_SOURCE_VERSION:=4cc14d346bdedc81a52b2981f9f568176513dc3e
 PKG_SOURCE_URL:=https://codeload.github.com/FRRouting/frr/tar.gz/$(PKG_SOURCE_VERSION)?
 
 
-PKG_HASH:=6e313edff69cd12444b53dbc5593892b280280b7735e620c00189a669f80bdcc
+PKG_HASH:=dd0ec4616b85f5142c9e4ecc4a17b944000a3219bedf9d091484503e8c91e0e7
 PKG_MAINTAINER:=Lucian Cristian <lucian.cristian@gmail.com>
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_SOURCE_VERSION)
@@ -121,6 +121,12 @@ define Package/frr-zebra
   CONFLICTS:=quagga-zebra
 endef
 
+define Package/frr-pythontools
+  $(call Package/frr/Default)
+  TITLE:=Python reload tool
+  DEPENDS+=+frr-libfrr +python3-base +python3-light +python3-logging
+endef
+
 ##Migrate from quagga
 ##should test file exists and link in frr folder
 #define Package/frr/postinst
@@ -164,6 +170,7 @@ define Host/Configure
 	$(SED) 's/$$$$(MAKE) $$$$(AM_MAKEFLAGS) install-am/# $$$$(MAKE) $$$$(AM_MAKEFLAGS) install-am/' $(HOST_BUILD_DIR)/Makefile.in
 endef
 
+#HOST_CPPFLAGS += -I$(STAGING_DIR_HOST)/include/libelf
 HOST_CONFIGURE_ARGS+= \
 	--enable-clippy-only
 
@@ -177,6 +184,7 @@ CONFIGURE_ARGS+= \
 	--prefix=/usr \
 	--enable-shared \
 	--disable-static \
+	--disable-pathd \
 	--enable-user=network \
 	--enable-group=network \
 	--disable-ospfclient \
@@ -216,6 +224,13 @@ define Package/frr-libfrr/install
 	$(INSTALL_CONF) ./files/{frr.conf,daemons} $(1)/etc/frr/
 endef
 
+define Package/frr-pythontools/install
+	$(INSTALL_DIR) $(1)/usr/lib/frr $(1)/usr/sbin $(1)/etc/frr
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/*.py $(1)/usr/lib/frr/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/frr-reload $(1)/usr/sbin/
+	$(INSTALL_CONF) $(PKG_BUILD_DIR)/tools/etc/frr/support_bundle_commands.conf $(1)/etc/frr/
+endef
+
 define Package/frr-vtysh/install
 	$(INSTALL_DIR) $(1)/usr/bin $(1)/etc/frr
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/vtysh $(1)/usr/bin/
@@ -225,6 +240,7 @@ endef
 $(eval $(call HostBuild))
 $(eval $(call BuildPackage,frr))
 $(eval $(call BuildPackage,frr-libfrr))
+$(eval $(call BuildPackage,frr-pythontools))
 $(eval $(call BuildPackage,frr-watchfrr))
 $(eval $(call BuildPackage,frr-zebra))
 $(eval $(call BuildPackage,frr-vtysh))
