@@ -77,6 +77,7 @@ FFMPEG_CUSTOM_MUXERS:= \
 	mpegts \
 	ogg \
 	rtp \
+	matroska \
 
 FFMPEG_CUSTOM_DEMUXERS:= \
 	aac \
