@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2021 Siger Yang <sigeryeung@gmail.com>
+# Copyright (C) 2021 Siger Yang <siger.yang@outlook.com>
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -8,11 +8,11 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luaossl
-PKG_VERSION:=20200709
+PKG_VERSION:=20220711
 PKG_RELEASE:=1
-PKG_MAINTAINER:=Siger Yang <sigeryeung@gmail.com>
+PKG_MAINTAINER:=Siger Yang <siger.yang@outlook.com>
 
-PKG_MIRROR_HASH:=6dbca3cdc50ed7e3b0821783da2407accfb6d25addc3edf1d8e17b00530f5a25
+PKG_MIRROR_HASH:=7abb1070da36906f9ef310af1a12827543bb5de4bbe239068420fd8b3e3858d2
 PKG_SOURCE_URL:=https://github.com/wahern/luaossl.git
 PKG_SOURCE_VERSION:=rel-$(PKG_VERSION)
 PKG_SOURCE_PROTO:=git

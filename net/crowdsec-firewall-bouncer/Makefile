@@ -1,19 +1,17 @@
 # SPDX-License-Identifier: MIT
 #
-# Copyright (C) 2021 Gerald Kerma
+# Copyright (C) 2021-2022 Gerald Kerma <gandalf@gk2.net>
 #
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=crowdsec-firewall-bouncer
-PKG_VERSION:=0.0.16
-PKG_RELEASE:=$(AUTORELEASE)
+PKG_VERSION:=0.0.31
+PKG_RELEASE:=2
 
-PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/crowdsecurity/cs-firewall-bouncer
-PKG_SOURCE_VERSION:=v$(PKG_VERSION)
-PKG_SOURCE_DATE:=20211117
-PKG_MIRROR_HASH:=769a01bcee0ac27627fc00a59259ca09f89f382fc228c7bb24dc5d7df8ae9a12
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://codeload.github.com/crowdsecurity/cs-firewall-bouncer/tar.gz/v$(PKG_VERSION)?
+PKG_HASH:=c34963f0680ae296ae974d8f6444a2d1e2dd7617e7b05d4ad85c320529eec5f5
 
 PKG_LICENSE:=MIT
 PKG_LICENSE_FILES:=LICENSE
@@ -21,23 +19,21 @@ PKG_MAINTAINER:=Gerald Kerma <gandalf@gk2.net>
 
 PKG_BUILD_DEPENDS:=golang/host
 PKG_BUILD_PARALLEL:=1
-PKG_USE_MIPS16:=0
+PKG_BUILD_FLAGS:=no-mips16
+PKG_BUILD_DIR:=$(BUILD_DIR)/cs-firewall-bouncer-$(PKG_VERSION)
 
-CSFB_BUILD_VERSION?=$(PKG_SOURCE_VERSION)
-CSFB_BUILD_GOVERSION=$(shell go version | cut -d " " -f3 | sed -r 's/[go]+//g')
-CWD_BUILD_TIMESTAMP:=$(SOURCE_DATE_EPOCH)
-CSFB_BUILD_TAG=openwrt
-
+CSFB_BUILD_VERSION?=v$(PKG_VERSION)
+CSFB_BUILD_GOVERSION:=$(shell go version | cut -d " " -f3 | sed -E 's/[go]+//g')
+CSFB_BUILD_TIMESTAMP:=$(shell date +%F"_"%T)
+CSFB_BUILD_TAG:=openwrt-$(PKG_VERSION)-$(PKG_RELEASE)
 CSFB_VERSION_PKG:=github.com/crowdsecurity/cs-firewall-bouncer/pkg/version
 
 GO_PKG:=github.com/crowdsecurity/cs-firewall-bouncer
-
+GO_PKG_INSTALL_ALL:=1
 GO_PKG_LDFLAGS_X:=$(CSFB_VERSION_PKG).Version=$(CSFB_BUILD_VERSION) \
 	$(CSFB_VERSION_PKG).BuildDate=$(CSFB_BUILD_TIMESTAMP) \
 	$(CSFB_VERSION_PKG).Tag=$(CSFB_BUILD_TAG) \
 	$(CSFB_VERSION_PKG).GoVersion=$(CSFB_BUILD_GOVERSION)
-
-GO_PKG_INSTALL_ALL:=1
 
 include $(INCLUDE_DIR)/package.mk
 include ../../lang/golang/golang-package.mk
@@ -51,9 +47,7 @@ endef
 
 define Package/crowdsec-firewall-bouncer
 $(call Package/crowdsec-firewall-bouncer/Default)
-  DEPENDS:=@(PACKAGE_iptables||PACKAGE_nftables) \
-	$(GO_ARCH_DEPENDS) \
-	+crowdsec
+  DEPENDS:=$(GO_ARCH_DEPENDS)
 endef
 
 define Package/golang-crowdsec-firewall-bouncer-dev
@@ -70,7 +64,7 @@ define Package/crowdsec-firewall-bouncer/Default/description
   crowdsec-firewall-bouncer will fetch new and old decisions
   from a CrowdSec API to add them in a blocklist used by supported firewalls.
 
-  You must install iptables+ipset or nftables.
+  You must install nftables.
 endef
 
 define Package/crowdsec-firewall-bouncer/description
@@ -88,29 +82,15 @@ endef
 define Package/crowdsec-firewall-bouncer/install
 	$(call GoPackage/Package/Install/Bin,$(1))
 
-	$(INSTALL_DIR) $(1)/etc/crowdsec/bouncers
-	$(INSTALL_DATA) \
-		$(GO_PKG_BUILD_DIR)/src/$(GO_PKG)/config/crowdsec-firewall-bouncer.yaml \
-		$(1)/etc/crowdsec/bouncers
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_CONF) ./files/crowdsec.config $(1)/etc/config/crowdsec
 
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) \
-		./files/crowdsec-firewall-bouncer.initd \
-		$(1)/etc/init.d/crowdsec-firewall-bouncer
-
-	$(INSTALL_DIR) $(1)/etc
-	$(INSTALL_BIN) \
-		./files/crowdsec-firewall-bouncer.firewall \
-		$(1)/etc/firewall.cs
-
-	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) \
-		./files/crowdsec-firewall-bouncer.defaults \
-		$(1)/etc/uci-defaults/99_crowdsec-firewall-bouncer
+	$(INSTALL_BIN) ./files/crowdsec-firewall-bouncer.initd $(1)/etc/init.d/crowdsec-firewall-bouncer
 endef
 
 define Package/crowdsec-firewall-bouncer/conffiles
-/etc/crowdsec/bouncers/crowdsec-firewall-bouncer.yaml
+/etc/config/crowdsec
 endef
 
 $(eval $(call GoBinPackage,crowdsec-firewall-bouncer))

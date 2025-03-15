@@ -1,13 +1,13 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 #
-# This is free software, licensed under the GNU General Public License v2.
-# See /LICENSE for more information.
+# Copyright (C) 2021-2022 Gerald Kerma
 #
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=fail2ban
 PKG_VERSION:=0.11.2
-PKG_RELEASE:=$(AUTORELEASE)
+PKG_RELEASE:=9
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/fail2ban/fail2ban/tar.gz/$(PKG_VERSION)?
@@ -16,9 +16,12 @@ PKG_HASH:=383108e5f8644cefb288537950923b7520f642e7e114efb843f6e7ea9268b1e0
 PKG_MAINTAINER:=Gerald Kerma <gandalf@gk2.net>
 PKG_LICENSE:=GPL-2.0-or-later
 PKG_LICENSE_FILES:=COPYING
+PKG_CPE_ID:=cpe:/a:fail2ban:fail2ban
 
 include $(INCLUDE_DIR)/package.mk
 include ../../lang/python/python3-package.mk
+
+HOST_BUILD_DEPENDS:=2to3/host
 
 define Package/fail2ban
   SECTION:=net
@@ -44,6 +47,11 @@ endef
 define Package/fail2ban/conffiles
 /etc/fail2ban/
 /etc/config/fail2ban
+endef
+
+define Build/Compile
+	cd $(PKG_BUILD_DIR) && ./fail2ban-2to3
+	$(call Py3Build/Compile)
 endef
 
 define Py3Package/fail2ban/filespec

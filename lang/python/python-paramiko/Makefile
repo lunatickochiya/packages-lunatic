@@ -1,21 +1,20 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=python-paramiko
-PKG_VERSION:=2.8.0
-PKG_RELEASE:=1
+PKG_VERSION:=2.12.0
+PKG_RELEASE:=2
 
 PYPI_NAME:=paramiko
-PKG_HASH:=e673b10ee0f1c80d46182d3af7751d033d9b573dd7054d2d0aa46be186c3c1d2
+PKG_HASH:=376885c05c5d6aa6e1f4608aac2a6b5b0548b1add40274477324605903d9cd49
 
 PKG_MAINTAINER:=Javier Marcet <javier@marcet.info>
 PKG_LICENSE:=LGPL-2.1-or-later
 PKG_LICENSE_FILES:=LICENSE
+PKG_CPE_ID:=cpe:/a:paramiko:paramiko
 
 include ../pypi.mk
 include $(INCLUDE_DIR)/package.mk
 include ../python3-package.mk
-
-PYTHON3_PKG_SETUP_ARGS:=
 
 define Package/python3-paramiko
   SECTION:=lang

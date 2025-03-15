@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=htop
-PKG_VERSION:=3.1.2
-PKG_RELEASE:=$(AUTORELEASE)
+PKG_VERSION:=3.4.0
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/htop-dev/htop/tar.gz/$(PKG_VERSION)?
-PKG_HASH:=fe9559637c8f21f5fd531a4c072048a404173806acbdad1359c6b82fd87aa001
+PKG_HASH:=7a45cd93b393eaa5804a7e490d58d0940b1c74bb24ecff2ae7b5c49e7a3c1198
 
 PKG_LICENSE:=GPL-2.0-or-later
 PKG_LICENSE_FILES:=COPYING
@@ -48,11 +48,12 @@ define Package/htop/config
 	config HTOP_LMSENSORS
 		bool "Compile Htop with lm-sensors support"
 		depends on PACKAGE_htop
-		default y if TARGET_x86
+		default y
 		help
 			Build htop with lm-sensors support.
-			This doesn't add lm-sensors as dependency,
-			if present it'll loaded using dlopen().
+			This increases the binary by approx 5 kB.
+			Users wanting this functionality need to
+			install libsensors.
 endef
 
 CONFIGURE_ARGS += \

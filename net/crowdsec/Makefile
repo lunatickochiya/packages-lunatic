@@ -1,19 +1,17 @@
 # SPDX-License-Identifier: MIT
 #
-# Copyright (C) 2021 Gerald Kerma
+# Copyright (C) 2021-2022 Gerald Kerma <gandalf@gk2.net>
 #
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=crowdsec
-PKG_VERSION:=1.2.1
-PKG_RELEASE:=$(AUTORELEASE)
+PKG_VERSION:=1.6.2
+PKG_RELEASE:=1
 
-PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/crowdsecurity/crowdsec
-PKG_SOURCE_VERSION:=v$(PKG_VERSION)
-PKG_SOURCE_DATE:=20211117
-PKG_MIRROR_HASH:=dfe50e5fb4d32fb6c21275b3f13a837ad64a9054e78076b44325376dc003fc64
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://codeload.github.com/crowdsecurity/crowdsec/tar.gz/v$(PKG_VERSION)?
+PKG_HASH:=5f8a4d6ebdaec0a31f6c66c8523896167be59f270b4337ce1db44f62403e7d94
 
 PKG_LICENSE:=MIT
 PKG_LICENSE_FILES:=LICENSE
@@ -21,27 +19,26 @@ PKG_MAINTAINER:=Gerald Kerma <gandalf@gk2.net>
 
 PKG_BUILD_DEPENDS:=golang/host
 PKG_BUILD_PARALLEL:=1
-PKG_USE_MIPS16:=0
+PKG_BUILD_FLAGS:=no-mips16
 
 CWD_SYSTEM:=openwrt
-CWD_BUILD_VERSION?=$(PKG_SOURCE_VERSION)
+
+CWD_BUILD_VERSION?=v$(PKG_VERSION)
 CWD_BUILD_GOVERSION:=$(shell go version | cut -d " " -f3 | sed -E 's/[go]+//g')
 CWD_BUILD_CODENAME:=alphaga
-CWD_BUILD_TIMESTAMP:=$(SOURCE_DATE_EPOCH)
-CWD_BUILD_TAG:=openwrt
+CWD_BUILD_TIMESTAMP:=$(shell date +%F"_"%T)
+CWD_BUILD_TAG:=openwrt-$(PKG_VERSION)-$(PKG_RELEASE)
 
-CWD_VERSION_PKG:=github.com/crowdsecurity/crowdsec/pkg/cwversion
+CWD_VERSION_PKG:=github.com/crowdsecurity/go-cs-lib/version
 
 GO_PKG:=github.com/crowdsecurity/crowdsec
-
+GO_PKG_INSTALL_ALL:=1
 GO_PKG_LDFLAGS_X:=$(CWD_VERSION_PKG).Version=$(CWD_BUILD_VERSION) \
 	$(CWD_VERSION_PKG).System=$(CWD_SYSTEM) \
 	$(CWD_VERSION_PKG).BuildDate=$(CWD_BUILD_TIMESTAMP) \
 	$(CWD_VERSION_PKG).Codename=$(CWD_BUILD_CODENAME)  \
 	$(CWD_VERSION_PKG).Tag=$(CWD_BUILD_TAG) \
 	$(CWD_VERSION_PKG).GoVersion=$(CWD_BUILD_GOVERSION)
-
-GO_PKG_INSTALL_ALL:=1
 
 include $(INCLUDE_DIR)/package.mk
 include ../../lang/golang/golang-package.mk
@@ -84,6 +81,10 @@ $(call Package/crowdsec/Default/description)
 
   This package provides the source files for the program.
 endef
+
+ifneq ($(CONFIG_USE_MUSL),)
+  TARGET_CFLAGS += -D_LARGEFILE64_SOURCE
+endif
 
 define Package/crowdsec/install
 	$(call GoPackage/Package/Install/Bin,$(1))

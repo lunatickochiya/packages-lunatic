@@ -1,12 +1,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libtorrent-rasterbar
-PKG_VERSION:=2.0.4
-PKG_RELEASE:=$(AUTORELEASE)
+PKG_VERSION:=2.0.10
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://codeload.github.com/arvidn/libtorrent/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=dfbc0d67c75e828530ee2b705442196429eaf255a3f757099e69c95f33e6f940
+PKG_SOURCE_URL:=https://github.com/arvidn/libtorrent/releases/download/v$(PKG_VERSION)/
+PKG_HASH:=fc935b8c1daca5c0a4d304bff59e64e532be16bb877c012aea4bda73d9ca885d
 
 PKG_MAINTAINER:=David Yang <mmyangfl@gmail.com>
 PKG_LICENSE:=BSD-3-Clause
@@ -24,7 +24,7 @@ define Package/libtorrent-rasterbar
 	$(call Package/libtorrent-rasterbar/Default)
 	SECTION:=libs
 	CATEGORY:=Libraries
-	DEPENDS:=+boost-system +libopenssl +libatomic
+	DEPENDS:=+boost-system +libopenssl +libatomic +libstdcpp
 endef
 
 #define Package/python3-libtorrent
@@ -45,24 +45,6 @@ endef
 #	$(call Package/libtorrent-rasterbar/description)
 #	This package contains Python 3 bindings for the libtorrent-rasterbar library.
 #endef
-
-define Download/try_signal
-	VERSION:=334fd139e2bb387017b42d36753a03935e3bca75
-	SUBDIR:=deps/try_signal
-	FILE:=$(PKG_NAME)-try_signal-$$(VERSION).tar.xz
-	URL:=https://github.com/arvidn/try_signal.git
-	MIRROR_HASH:=c85d65352c20713cb6cfb005942b46ab7579dc7eef3b876666bff9347149d47f
-	PROTO:=git
-endef
-$(eval $(call Download,try_signal))
-
-PKG_UNPACK:=$(HOST_TAR) -C $(PKG_BUILD_DIR) --strip-components=1 -xzf $(DL_DIR)/$(PKG_SOURCE)
-
-define Build/Prepare
-	$(Build/Prepare/Default)
-	$(eval $(Download/try_signal))
-	xzcat $(DL_DIR)/$(FILE) | tar -C $(PKG_BUILD_DIR) $(TAR_OPTIONS)
-endef
 
 #CMAKE_OPTIONS += \
 #	-Dpython-bindings=ON \

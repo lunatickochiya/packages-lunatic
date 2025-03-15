@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=bash
-PKG_VERSION:=5.1.8
-PKG_RELEASE:=$(AUTORELEASE)
+PKG_VERSION:=5.2.32
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=@GNU/bash
-PKG_HASH:=0cfb5c9bb1a29f800a97bd242d19511c997a1013815b805e0fdd32214113d6be
+PKG_HASH:=d3ef80d2b67d8cbbe4d3265c63a72c46f9b278ead6e0e06d61801b58f23f50b5
 
 PKG_MAINTAINER:=Marcel Denia <naoir@gmx.net>
 PKG_LICENSE:=GPL-3.0-or-later
@@ -31,7 +31,7 @@ define Package/bash
   SUBMENU:=Shells
   TITLE:=The GNU Bourne Again SHell
   DEPENDS:=+libncurses +libreadline
-  URL:=http://www.gnu.org/software/bash/
+  URL:=https://www.gnu.org/software/bash/
 endef
 
 define Package/bash/description
@@ -43,6 +43,7 @@ endef
 define Package/bash/conffiles
 /etc/bash.bashrc
 /etc/bash.bash_logout
+/etc/profile.d/sys_bashrc.sh
 endef
 
 # Bash detects and enables certain features by runtest simple piece of code

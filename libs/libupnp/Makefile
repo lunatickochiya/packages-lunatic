@@ -1,12 +1,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libupnp
-PKG_VERSION:=1.14.7
-PKG_RELEASE:=$(AUTORELEASE)
+PKG_VERSION:=1.14.18
+PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:=@SF/pupnp
-PKG_HASH:=7b66ac4a86bc0e218e2771ac274b2945bc4154bf9054e57b14afb67c26ac7c24
+PKG_HASH:=16a7cee93ce2868ae63ab1a8164dc7de43577c59983b9f61293a310d6888dceb
 
 PKG_MAINTAINER:=Ted Hess <thess@kitschensync.net>
 PKG_LICENSE:=BSD-3-Clause
@@ -54,7 +54,7 @@ CMAKE_OPTIONS += \
 	-DBUILD_TESTING=OFF \
 	-Dclient=ON \
 	-Ddevice=ON \
-	-Dwebserver=OFF \
+	-Dwebserver=ON \
 	-Dssdp=ON \
 	-Doptssdp=OFF \
 	-Dsoap=ON \

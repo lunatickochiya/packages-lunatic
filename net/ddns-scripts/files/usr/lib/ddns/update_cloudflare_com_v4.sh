@@ -15,7 +15,7 @@
 # option password  - cloudflare api key, you can get it from cloudflare.com/my-account/
 # option domain    - "hostname@yourdomain.TLD"	# syntax changed to remove split_FQDN() function and tld_names.dat.gz
 #
-# The proxy status would not be changed by this script. Please change it in Cloudflare dashboard manually. 
+# The proxy status would not be changed by this script. Please change it in Cloudflare dashboard manually.
 #
 # variable __IP already defined with the ip-address to use for update
 #
@@ -27,9 +27,8 @@
 [ $use_https -eq 0 ] && use_https=1	# force HTTPS
 
 # used variables
-local __HOST __DOMAIN __TYPE __URLBASE __PRGBASE __RUNPROG __DATA __IPV6 __ZONEID __RECID __PROXIED
+local __HOST __DOMAIN __TYPE __URLBASE __PRGBASE __RUNPROG __DATA __IPV6 __ZONEID __RECID
 local __URLBASE="https://api.cloudflare.com/client/v4"
-local __TTL=120
 
 # split __HOST __DOMAIN from $domain
 # given data:
@@ -73,11 +72,11 @@ cloudflare_transfer() {
 		}
 
 		__CNT=$(( $__CNT + 1 ))	# increment error counter
-		# if error count > retry_count leave here
-		[ $retry_count -gt 0 -a $__CNT -gt $retry_count ] && \
-			write_log 14 "Transfer failed after $retry_count retries"
+		# if error count > retry_max_count leave here
+		[ $retry_max_count -gt 0 -a $__CNT -gt $retry_max_count ] && \
+			write_log 14 "Transfer failed after $retry_max_count retries"
 
-		write_log 4 "Transfer failed - retry $__CNT/$retry_count in $RETRY_SECONDS seconds"
+		write_log 4 "Transfer failed - retry $__CNT/$retry_max_count in $RETRY_SECONDS seconds"
 		sleep $RETRY_SECONDS &
 		PID_SLEEP=$!
 		wait $PID_SLEEP	# enable trap-handler
@@ -97,8 +96,8 @@ __PRGBASE="$CURL -RsS -o $DATFILE --stderr $ERRFILE"
 # force network/interface-device to use for communication
 if [ -n "$bind_network" ]; then
 	local __DEVICE
-	network_get_physdev __DEVICE $bind_network || \
-		write_log 13 "Can not detect local device using 'network_get_physdev $bind_network' - Error: '$?'"
+	network_get_device __DEVICE $bind_network || \
+		write_log 13 "Can not detect local device using 'network_get_device $bind_network' - Error: '$?'"
 	write_log 7 "Force communication via device '$__DEVICE'"
 	__PRGBASE="$__PRGBASE --interface $__DEVICE"
 fi
@@ -134,15 +133,19 @@ else
 fi
 __PRGBASE="$__PRGBASE --header 'Content-Type: application/json' "
 
-# read zone id for registered domain.TLD
-__RUNPROG="$__PRGBASE --request GET '$__URLBASE/zones?name=$__DOMAIN'"
-cloudflare_transfer || return 1
-# extract zone id
-__ZONEID=$(grep -o '"id":\s*"[^"]*' $DATFILE | grep -o '[^"]*$' | head -1)
-[ -z "$__ZONEID" ] && {
-	write_log 4 "Could not detect 'zone id' for domain.tld: '$__DOMAIN'"
-	return 127
-}
+if [ -n "$zone_id" ]; then
+	__ZONEID="$zone_id"
+else
+	# read zone id for registered domain.TLD
+	__RUNPROG="$__PRGBASE --request GET '$__URLBASE/zones?name=$__DOMAIN'"
+	cloudflare_transfer || return 1
+	# extract zone id
+	__ZONEID=$(grep -o '"id":\s*"[^"]*' $DATFILE | grep -o '[^"]*$' | head -1)
+	[ -z "$__ZONEID" ] && {
+		write_log 4 "Could not detect 'zone id' for domain.tld: '$__DOMAIN'"
+		return 127
+	}
+fi
 
 # read record id for A or AAAA record of host.domain.TLD
 __RUNPROG="$__PRGBASE --request GET '$__URLBASE/zones/$__ZONEID/dns_records?name=$__HOST&type=$__TYPE'"
@@ -182,16 +185,14 @@ __DATA=$(grep -o '"content":\s*"[^"]*' $DATFILE | grep -o '[^"]*$' | head -1)
 
 # update is needed
 # let's build data to send
-# set proxied parameter
-__PROXIED=$(grep -o '"proxied":\s*[^",]*' $DATFILE | grep -o '[^:]*$')
 
 # use file to work around " needed for json
 cat > $DATFILE << EOF
-{"id":"$__ZONEID","type":"$__TYPE","name":"$__HOST","content":"$__IP","ttl":$__TTL,"proxied":$__PROXIED}
+{"content":"$__IP"}
 EOF
 
 # let's complete transfer command
-__RUNPROG="$__PRGBASE --request PUT --data @$DATFILE '$__URLBASE/zones/$__ZONEID/dns_records/$__RECID'"
+__RUNPROG="$__PRGBASE --request PATCH --data @$DATFILE '$__URLBASE/zones/$__ZONEID/dns_records/$__RECID'"
 cloudflare_transfer || return 1
 
 return 0
